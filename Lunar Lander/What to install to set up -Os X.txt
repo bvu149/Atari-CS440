@@ -1,0 +1,6 @@
+
+brew install swig
+brew install cmake boost boost-python sdl2 swig wget
+xcode-select --install
+pip install Box2D
+Pip install box2d-py 
