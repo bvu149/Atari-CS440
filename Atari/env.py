@@ -63,9 +63,9 @@ observation = env.reset()
 # image.save('stacked.png')
 
 #Stack Images
-stack_size = 4  # Stacking 4 frames
+stack_size = 3  # Stacking 4 frames
 # Initialize deque with zero-images one array for each image. Deque is a special kind of queue that deletes last entry when new entry comes in
-current_frames  =  deque([np.zeros((84,84), dtype=np.int) for i in range(stack_size)], maxlen=4)
+current_frames  =  deque([np.zeros((84,84), dtype=np.int) for i in range(stack_size)], maxlen=3)
 
 def update_current_frames(current_frames, observe, is_new_game):
     #If we are just beginning the episode, there is no previous action. Stack the current state 4 times to avoid sub-optimal, and make this the current history (a list of states). 
@@ -79,7 +79,7 @@ def update_current_frames(current_frames, observe, is_new_game):
     if (is_new_game):
         #WIPE CURRENT_FRAMES
        
-        updated_current_frames = deque([np.zeros((84,84), dtype=np.int) for i in range(stack_size)], maxlen=4) #makes deque object
+        updated_current_frames = deque([np.zeros((84,84), dtype=np.int) for i in range(stack_size)], maxlen=3) #makes deque object
         while counter <= stack_size:
             updated_current_frames.append(state)
             counter += 1 

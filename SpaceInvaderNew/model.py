@@ -6,9 +6,10 @@ import random
 from collections import deque, Counter
 import time
 import os
+import pandas as pd
 
 
-model_path = '/Users/BenMeow/Desktop/BU 20 Spring/CS440/Final/Atari/Model'
+model_path = '/usr4/cs440/bvu/SpaceInvaderNew/Models/'
 
 tf.compat.v1.reset_default_graph()
 #Reset is technically not necessary if variables done  in TF2
@@ -25,7 +26,6 @@ class DQN:
     def __init__(self, env, single_frame_dim, num_frames_to_stack, old_model_filepath=None):
         self.env = env
         self.memory = deque(maxlen=100000) #5000
-
         self.gamma = 0.9
         self.epsilon = 1.0
         self.epsilon_min = 0.05
@@ -36,6 +36,7 @@ class DQN:
         self.num_steps_since_last_update = 0
         self.single_frame_dim = single_frame_dim
         self.num_frames_to_stack = num_frames_to_stack
+       
         self.model = self.create_model()
         self.target_model = self.create_model()
 
@@ -103,7 +104,7 @@ class DQN:
             return self.env.action_space.sample()
         else:
             reshaped_state = np.expand_dims(state, axis=0).astype('float16')
-            return np.argmax(self.model.predict(reshaped_state)[0]) #The predict returns a (1,7)
+            return np.argmax(self.model.predict(reshaped_state)[0]) 
 
     def save_model(self, fn):
         self.model.save(fn)
@@ -114,9 +115,9 @@ class DQN:
 #######################################################################################
 env = gym.make('SpaceInvaders-v0')
 raw_image_dim = preprocess_image(env.reset()).shape
-num_episodes = 8000
-num_frames_to_collapse = 4
-num_frames_to_stack = 4
+num_episodes = 3000
+num_frames_to_collapse = 3
+num_frames_to_stack = 3
 my_agent = DQN(env=env,single_frame_dim=raw_image_dim,num_frames_to_stack=num_frames_to_stack)
  
 totalreward = []
@@ -127,7 +128,7 @@ for episode in range(num_episodes):
     print("---------------------------------------------------")
     print("Episode: " + str(episode) + " started")
     time_start = time.time()
-    current_frames  =  deque([np.zeros((84,84), dtype=np.int) for i in range(stack_size)], maxlen=4)
+    current_frames  =  deque([np.zeros((84,84), dtype=np.int) for i in range(stack_size)], maxlen=3)
     cur_state = np.repeat(preprocess_image(env.reset())[:, :, np.newaxis], stack_size, axis=2)
     episode_reward = 0
     step = 0
@@ -182,10 +183,19 @@ for episode in range(num_episodes):
     print("Episode: " + str(int(episode)) + " completed in steps/time/avg_running_reward: " + str(steps[-1]) + " / " + str(int(time_end - time_start)) + " / " + str(np.array(totalreward)[-100:].mean()))
     print("This took: " + str(int(time_end - time_start)) + " seconds.")
     print('-----------------------------------------------------------------------------------------------------------')
+
+    if episode % 500 == 0:
+        results_df = pd.DataFrame(totalreward, columns=['episode_reward'])
+        results_df['steps_taken'] = steps
+        results_df['average_running_reward'] = results_df['episode_reward'].rolling(window=10).mean()
+        results_df.to_csv(model_path + "training_results" + str(episode) + ".csv")
+
 env.close()
 
-results_df = pd.DataFrame(totalreward, columns=['episode_reward'])
-results_df['steps_taken'] = steps
-results_df['average_running_reward'] = results_df['episode_reward'].rolling(window=100).mean()
+# results_df = pd.DataFrame(totalreward, columns=['episode_reward'])
+# results_df['steps_taken'] = steps
+# results_df['average_running_reward'] = results_df['episode_reward'].rolling(window=100).mean()
 
-results_df.to_csv(model_path + "training_results.csv")
+# results_df.to_csv(model_path + "training_results.csv")
+
+ 
